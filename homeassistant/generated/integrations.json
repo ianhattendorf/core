@@ -2543,6 +2543,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "hitachiprojector": {
+      "name": "Hitachi Projector",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hitron_coda": {
       "name": "Rogers Hitron CODA",
       "integration_type": "hub",

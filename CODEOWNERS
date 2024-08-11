@@ -607,6 +607,8 @@ build.json @home-assistant/supervisor
 /tests/components/hisense_aehw4a1/ @bannhead
 /homeassistant/components/history/ @home-assistant/core
 /tests/components/history/ @home-assistant/core
+/homeassistant/components/hitachiprojector/ @ianhattendorf
+/tests/components/hitachiprojector/ @ianhattendorf
 /homeassistant/components/hive/ @Rendili @KJonline
 /tests/components/hive/ @Rendili @KJonline
 /homeassistant/components/hko/ @MisterCommand

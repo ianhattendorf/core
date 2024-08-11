@@ -246,6 +246,7 @@ FLOWS = {
         "heos",
         "here_travel_time",
         "hisense_aehw4a1",
+        "hitachiprojector",
         "hive",
         "hko",
         "hlk_sw16",
