@@ -1,0 +1,13 @@
+{
+  "domain": "hitachiprojector",
+  "name": "Hitachi Projector",
+  "codeowners": ["@ianhattendorf"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/hitachiprojector",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["libhitachiprojector==0.0.1"],
+  "ssdp": [],
+  "zeroconf": []
+}
