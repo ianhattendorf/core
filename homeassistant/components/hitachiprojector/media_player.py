@@ -79,10 +79,11 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     def device_info(self) -> DeviceInfo:
         """Information about this entity/device."""
         return {
+            "configuration_url": f"http://{self._con.host}",
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
-            "name": "Hitachi Projector",
             "manufacturer": "Hitachi",
+            "name": "Hitachi Projector",
         }
 
     @property
