@@ -9,16 +9,14 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 
-# TODO Create ConfigEntry type alias with API object
-# TODO Rename type alias and update all entry annotations
-# type New_NameConfigEntry = ConfigEntry[MyApi]  # noqa: F821
-type New_NameConfigEntry = ConfigEntry  # noqa: F821
+type HitachiProjectorConfigEntry = ConfigEntry[HitachiProjectorConnection]
 
 
-# TODO Update entry annotation
-async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: HitachiProjectorConfigEntry
+) -> bool:
     """Set up Hitachi Projector from a config entry."""
 
     con = HitachiProjectorConnection(host=entry.data[CONF_HOST])
@@ -33,7 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
     return True
 
 
-# TODO Update entry annotation
-async def async_unload_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: HitachiProjectorConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
