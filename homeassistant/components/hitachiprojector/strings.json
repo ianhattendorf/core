@@ -20,6 +20,9 @@
   },
   "entity": {
     "switch": {
+      "blank_mode": {
+        "name": "Blank mode"
+      },
       "auto_eco_mode": {
         "name": "Auto eco mode"
       },
