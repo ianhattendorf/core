@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from libhitachiprojector.hitachiprojector import (
-    Command,
-    HitachiProjectorConnection,
-    ReplyType,
-    commands,
-)
+from libhitachiprojector.hitachiprojector import HitachiProjectorConnection, ReplyType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -26,9 +21,8 @@ type New_NameConfigEntry = ConfigEntry  # noqa: F821
 async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
     """Set up Hitachi Projector from a config entry."""
 
-    # TODO async
     con = HitachiProjectorConnection(host=entry.data[CONF_HOST])
-    reply_type, _ = con.send_cmd(commands[Command.PowerGet])
+    reply_type, _ = await con.get_power_status()
     if reply_type != ReplyType.DATA:
         raise ConfigEntryNotReady(f"Unable to connect to {entry.data[CONF_HOST]}")
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from libhitachiprojector.hitachiprojector import (
     Command,
     HitachiProjectorConnection,
-    PowerStatus,
+    InputSource,
     ReplyType,
     commands,
 )
@@ -23,7 +23,7 @@ from homeassistant.exceptions import ConfigEntryError, InvalidStateError
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, POWER_STATUS_TO_MEDIA_PLAYER_STATE, SOURCE_TO_SET_COMMAND
 
 
 async def async_setup_entry(
@@ -54,7 +54,9 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     name: str
 
     supported_features = (
-        MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
     # TODO need to confirm _attr_unique_id, _attr_name, device_info.identifiers requirements
@@ -78,6 +80,8 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
         self._attr_name = f"hitachiprojector_{self.mac}"
 
         self._attr_device_class = MediaPlayerDeviceClass.TV
+
+        self._attr_source_list = [e.name for e in InputSource]
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
@@ -107,30 +111,34 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         try:
-            reply_type, data = self._con.send_cmd(commands[Command.PowerGet])
-            if reply_type != ReplyType.DATA or data is None:
+            reply_type, status = await self._con.get_power_status()
+            if reply_type != ReplyType.DATA or status is None:
                 raise InvalidStateError("Unexpected reply type")
-            status = PowerStatus(int.from_bytes(data, byteorder="little"))
-            match status:
-                case PowerStatus.On:
-                    self._attr_state = MediaPlayerState.ON
-                case PowerStatus.Off:
-                    self._attr_state = MediaPlayerState.OFF
-                case PowerStatus.CoolDown:
-                    self._attr_state = MediaPlayerState.OFF
+            self._attr_state = POWER_STATUS_TO_MEDIA_PLAYER_STATE[status]
             self._attr_available = True
         except RuntimeError:
             self._attr_available = False
 
+        reply_type, status = await self._con.get_input_source()
+        if reply_type == ReplyType.DATA and status is not None:
+            self._attr_source = status.name
+
     # TODO all async
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        reply_type, _ = self._con.send_cmd(commands[Command.PowerTurnOn])
+        reply_type, _ = await self._con.async_send_cmd(commands[Command.PowerTurnOn])
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        reply_type, _ = self._con.send_cmd(commands[Command.PowerTurnOff])
+        reply_type, _ = await self._con.async_send_cmd(commands[Command.PowerTurnOff])
+        if reply_type != ReplyType.ACK:
+            raise InvalidStateError("Unexpected reply type")
+
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        command = SOURCE_TO_SET_COMMAND[source]
+        reply_type, _ = await self._con.async_send_cmd(commands[command])
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
