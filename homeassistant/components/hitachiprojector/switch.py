@@ -6,6 +6,7 @@ from typing import Any
 
 from libhitachiprojector.hitachiprojector import (
     AutoEcoModeStatus,
+    BlankStatus,
     Command,
     EcoModeStatus,
     HitachiProjectorConnection,
@@ -41,6 +42,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
+            HitachiProjectorBlankModeSwitch(con, mac),
             HitachiProjectorEcoModeSwitch(con, mac),
             HitachiProjectorAutoEcoModeSwitch(con, mac),
         ]
@@ -75,6 +77,37 @@ class HitachiProjectorBaseSwitch(SwitchEntity):
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
         }
+
+
+class HitachiProjectorBlankModeSwitch(HitachiProjectorBaseSwitch):
+    """Representation of device switch."""
+
+    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
+        """Initialize the switch."""
+        super().__init__(con, mac, "blank_mode", "Blank mode")
+
+    async def async_update(self) -> None:
+        """Retrieve latest state of the device."""
+        try:
+            reply_type, status = await self._con.get_blank_status()
+            if reply_type != ReplyType.DATA or status is None:
+                raise InvalidStateError("Unexpected reply type")
+            self._attr_is_on = status == BlankStatus.On
+            self._attr_available = True
+        except RuntimeError:
+            self._attr_available = False
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn switch on."""
+        reply_type, _ = await self._con.async_send_cmd(commands[Command.BlankOn])
+        if reply_type != ReplyType.ACK:
+            raise InvalidStateError("Unexpected reply type")
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn switch off."""
+        reply_type, _ = await self._con.async_send_cmd(commands[Command.BlankOff])
+        if reply_type != ReplyType.ACK:
+            raise InvalidStateError("Unexpected reply type")
 
 
 class HitachiProjectorEcoModeSwitch(HitachiProjectorBaseSwitch):
