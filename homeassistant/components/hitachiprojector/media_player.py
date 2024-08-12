@@ -17,9 +17,10 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, InvalidStateError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,23 +36,18 @@ async def async_setup_entry(
 
     con = config_entry.runtime_data
 
-    name = config_entry.data.get(CONF_NAME)
-    if not name:
-        name = "UNKNOWN NAME"
-
     # Use config MAC for unique ID for now
     mac = config_entry.data.get(CONF_MAC)
     if not mac:
         raise ConfigEntryError("invalid mac")
 
-    async_add_entities([HitachiProjectorMediaPlayer(con, name, mac)])
+    async_add_entities([HitachiProjectorMediaPlayer(con, mac)])
 
 
 class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of a media player."""
 
     mac: str
-    name: str
 
     supported_features = (
         MediaPlayerEntityFeature.TURN_ON
@@ -59,25 +55,15 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    # TODO need to confirm _attr_unique_id, _attr_name, device_info.identifiers requirements
-    def __init__(self, con: HitachiProjectorConnection, name: str, mac: str) -> None:
+    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
         """Initialize the media player."""
-        # Usual setup is done here. Callbacks are added in async_added_to_hass.
-        self.name = name
         self.mac = format_mac(mac)
         self._con = con
 
-        # A unique_id for this entity with in this domain. This means for example if you
-        # have a sensor on this cover, you must ensure the value returned is unique,
-        # which is done here by appending "_cover". For more information, see:
-        # https://developers.home-assistant.io/docs/entity_registry_index/#unique-id-requirements
-        # Note: This is NOT used to generate the user visible Entity ID used in automations.
         self._attr_unique_id = f"hitachiprojector_{self.mac}_media_player"
 
-        # This is the name for this *entity*, the "name" attribute from "device_info"
-        # is used as the device name for device screens in the UI. This name is used on
-        # entity screens, and used to build the Entity ID that's used is automations etc.
-        self._attr_name = f"hitachiprojector_{self.mac}"
+        self._attr_has_entity_name = True
+        self._attr_name = None
 
         self._attr_device_class = MediaPlayerDeviceClass.TV
 
@@ -89,14 +75,13 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
 
-    # TODO make this unique
     @property
     def device_info(self) -> DeviceInfo:
         """Information about this entity/device."""
         return {
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
-            # If desired, the name for the device could be different to the entity
-            "name": self.name,
+            "name": "Hitachi Projector",
             "manufacturer": "Hitachi",
         }
 
@@ -123,7 +108,6 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
         if reply_type == ReplyType.DATA and status is not None:
             self._attr_source = status.name
 
-    # TODO all async
     async def async_turn_on(self) -> None:
         """Turn the device on."""
         reply_type, _ = await self._con.async_send_cmd(commands[Command.PowerTurnOn])
