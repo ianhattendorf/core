@@ -1048,7 +1048,7 @@ leaone-ble==0.1.0
 led-ble==1.0.2
 
 # homeassistant.components.hitachiprojector
-libhitachiprojector==0.0.3
+libhitachiprojector==0.0.4
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2

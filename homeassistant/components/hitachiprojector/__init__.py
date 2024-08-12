@@ -5,7 +5,7 @@ from __future__ import annotations
 from libhitachiprojector.hitachiprojector import HitachiProjectorConnection, ReplyType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -19,7 +19,8 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Hitachi Projector from a config entry."""
 
-    con = HitachiProjectorConnection(host=entry.data[CONF_HOST])
+    password = entry.data[CONF_PASSWORD]
+    con = HitachiProjectorConnection(host=entry.data[CONF_HOST], password=password)
     reply_type, _ = await con.get_power_status()
     if reply_type != ReplyType.DATA:
         raise ConfigEntryNotReady(f"Unable to connect to {entry.data[CONF_HOST]}")

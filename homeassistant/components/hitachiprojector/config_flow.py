@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from libhitachiprojector.hitachiprojector import HitachiProjectorConnection, ReplyType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -16,32 +17,27 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO user/pass auth
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_MAC): str,
-    }
-)
-
 TITLE = "Hitachi Projector"
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+class HitachiProjectorHub:
+    """HitachiProjector hub."""
 
     def __init__(self, host: str) -> None:
         """Initialize."""
         self.host = host
 
-    async def authenticate(self, username: str, password: str) -> bool:
+    async def authenticate(self, password: str) -> bool:
         """Test if we can authenticate with the host."""
-        return True
+        con = HitachiProjectorConnection(host=self.host, password=password)
+        reply_type, _ = await con.get_power_status()
+        if reply_type == ReplyType.DATA:
+            return True
+
+        if reply_type == ReplyType.AUTH:
+            return False
+
+        raise CannotConnect
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -49,17 +45,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
-    # )
+    hub = HitachiProjectorHub(data[CONF_HOST])
 
-    hub = PlaceholderHub(data[CONF_HOST])
-
-    if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
+    if not await hub.authenticate(data[CONF_PASSWORD]):
         raise InvalidAuth
 
     # If you cannot connect:
@@ -94,8 +83,22 @@ class HitachiProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST, default=user_input.get(CONF_HOST) if user_input else None
+                ): str,
+                vol.Required(
+                    CONF_PASSWORD,
+                    default=user_input.get(CONF_PASSWORD) if user_input else None,
+                ): str,
+                vol.Required(
+                    CONF_MAC, default=user_input.get(CONF_MAC) if user_input else None
+                ): str,
+            }
+        )
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
 
