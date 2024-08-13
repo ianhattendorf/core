@@ -19,6 +19,14 @@
     }
   },
   "entity": {
+    "sensor": {
+      "filter_time": {
+        "name": "Filter time"
+      },
+      "lamp_time": {
+        "name": "Lamp time"
+      }
+    },
     "switch": {
       "blank_mode": {
         "name": "Blank mode"

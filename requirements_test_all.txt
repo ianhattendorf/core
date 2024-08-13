@@ -1069,7 +1069,7 @@ led-ble==1.0.2
 lektricowifi==0.0.42
 
 # homeassistant.components.hitachiprojector
-libhitachiprojector==0.0.4
+libhitachiprojector==0.0.5
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
