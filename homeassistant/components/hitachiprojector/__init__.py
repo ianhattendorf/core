@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SENSOR, Platform.SWITCH]
 
 type HitachiProjectorConfigEntry = ConfigEntry[HitachiProjectorConnection]
 
