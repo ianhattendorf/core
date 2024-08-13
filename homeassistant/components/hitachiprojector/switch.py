@@ -18,7 +18,11 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, InvalidStateError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    HomeAssistantError,
+    InvalidStateError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -94,7 +98,7 @@ class HitachiProjectorBlankModeSwitch(HitachiProjectorBaseSwitch):
                 raise InvalidStateError("Unexpected reply type")
             self._attr_is_on = status == BlankStatus.On
             self._attr_available = True
-        except RuntimeError:
+        except (RuntimeError, HomeAssistantError):
             self._attr_available = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -125,7 +129,7 @@ class HitachiProjectorEcoModeSwitch(HitachiProjectorBaseSwitch):
                 raise InvalidStateError("Unexpected reply type")
             self._attr_is_on = status == EcoModeStatus.Eco
             self._attr_available = True
-        except RuntimeError:
+        except (RuntimeError, HomeAssistantError):
             self._attr_available = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -156,7 +160,7 @@ class HitachiProjectorAutoEcoModeSwitch(HitachiProjectorBaseSwitch):
                 raise InvalidStateError("Unexpected reply type")
             self._attr_is_on = status == AutoEcoModeStatus.On
             self._attr_available = True
-        except RuntimeError:
+        except (RuntimeError, HomeAssistantError):
             self._attr_available = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
