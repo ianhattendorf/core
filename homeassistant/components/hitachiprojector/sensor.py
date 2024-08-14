@@ -51,16 +51,12 @@ class HitachiProjectorBaseSensor(SensorEntity):
 
     key: str
     mac: str
-    name: str
 
-    def __init__(
-        self, con: HitachiProjectorConnection, mac: str, key: str, name: str
-    ) -> None:
+    def __init__(self, con: HitachiProjectorConnection, mac: str, key: str) -> None:
         """Initialize the media player."""
         self._con = con
         self.key = key
         self.mac = format_mac(mac)
-        self.name = name
 
         self._attr_unique_id = f"hitachiprojector_{self.mac}_{self.key}"
 
@@ -86,7 +82,7 @@ class HitachiProjectorFilterTimeSensor(HitachiProjectorBaseSensor):
 
     def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
         """Initialize the sensor."""
-        super().__init__(con, mac, "filter_time", "Filter time")
+        super().__init__(con, mac, "filter_time")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -110,7 +106,7 @@ class HitachiProjectorLampTimeSensor(HitachiProjectorBaseSensor):
 
     def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
         """Initialize the sensor."""
-        super().__init__(con, mac, "lamp_time", "Lamp time")
+        super().__init__(con, mac, "lamp_time")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""

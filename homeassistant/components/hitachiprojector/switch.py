@@ -58,16 +58,12 @@ class HitachiProjectorBaseSwitch(SwitchEntity):
 
     key: str
     mac: str
-    name: str
 
-    def __init__(
-        self, con: HitachiProjectorConnection, mac: str, key: str, name: str
-    ) -> None:
+    def __init__(self, con: HitachiProjectorConnection, mac: str, key: str) -> None:
         """Initialize the media player."""
         self._con = con
         self.key = key
         self.mac = format_mac(mac)
-        self.name = name
 
         self._attr_unique_id = f"hitachiprojector_{self.mac}_{self.key}"
 
@@ -88,7 +84,7 @@ class HitachiProjectorBlankModeSwitch(HitachiProjectorBaseSwitch):
 
     def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
         """Initialize the switch."""
-        super().__init__(con, mac, "blank_mode", "Blank mode")
+        super().__init__(con, mac, "blank_mode")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -119,7 +115,7 @@ class HitachiProjectorEcoModeSwitch(HitachiProjectorBaseSwitch):
 
     def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
         """Initialize the switch."""
-        super().__init__(con, mac, "eco_mode", "Eco mode")
+        super().__init__(con, mac, "eco_mode")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -150,7 +146,7 @@ class HitachiProjectorAutoEcoModeSwitch(HitachiProjectorBaseSwitch):
 
     def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
         """Initialize the switch."""
-        super().__init__(con, mac, "auto_eco_mode", "Auto eco mode")
+        super().__init__(con, mac, "auto_eco_mode")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
