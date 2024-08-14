@@ -16,15 +16,9 @@ from libhitachiprojector.hitachiprojector import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryError,
-    HomeAssistantError,
-    InvalidStateError,
-)
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.exceptions import HomeAssistantError, InvalidStateError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -39,16 +33,11 @@ async def async_setup_entry(
 
     con = config_entry.runtime_data
 
-    # Use config MAC for unique ID for now
-    mac = config_entry.data.get(CONF_MAC)
-    if not mac:
-        raise ConfigEntryError("invalid mac")
-
     async_add_entities(
         [
-            HitachiProjectorBlankModeSwitch(con, mac),
-            HitachiProjectorEcoModeSwitch(con, mac),
-            HitachiProjectorAutoEcoModeSwitch(con, mac),
+            HitachiProjectorBlankModeSwitch(con, config_entry.entry_id),
+            HitachiProjectorEcoModeSwitch(con, config_entry.entry_id),
+            HitachiProjectorAutoEcoModeSwitch(con, config_entry.entry_id),
         ]
     )
 
@@ -57,15 +46,17 @@ class HitachiProjectorBaseSwitch(SwitchEntity):
     """Representation of device switch."""
 
     key: str
-    mac: str
+    entry_id: str
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str, key: str) -> None:
+    def __init__(
+        self, con: HitachiProjectorConnection, entry_id: str, key: str
+    ) -> None:
         """Initialize the media player."""
         self._con = con
         self.key = key
-        self.mac = format_mac(mac)
+        self.entry_id = entry_id
 
-        self._attr_unique_id = f"hitachiprojector_{self.mac}_{self.key}"
+        self._attr_unique_id = f"hitachiprojector_{self.entry_id}_{self.key}"
 
         self._attr_translation_key = self.key
         self._attr_has_entity_name = True
@@ -74,17 +65,16 @@ class HitachiProjectorBaseSwitch(SwitchEntity):
     def device_info(self) -> DeviceInfo:
         """Information about this entity/device."""
         return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            "identifiers": {(DOMAIN, self.mac)},
+            "identifiers": {(DOMAIN, self.entry_id)},
         }
 
 
 class HitachiProjectorBlankModeSwitch(HitachiProjectorBaseSwitch):
     """Representation of device switch."""
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
+    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
         """Initialize the switch."""
-        super().__init__(con, mac, "blank_mode")
+        super().__init__(con, entry_id, "blank_mode")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -113,9 +103,9 @@ class HitachiProjectorBlankModeSwitch(HitachiProjectorBaseSwitch):
 class HitachiProjectorEcoModeSwitch(HitachiProjectorBaseSwitch):
     """Representation of device switch."""
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
+    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
         """Initialize the switch."""
-        super().__init__(con, mac, "eco_mode")
+        super().__init__(con, entry_id, "eco_mode")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -144,9 +134,9 @@ class HitachiProjectorEcoModeSwitch(HitachiProjectorBaseSwitch):
 class HitachiProjectorAutoEcoModeSwitch(HitachiProjectorBaseSwitch):
     """Representation of device switch."""
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
+    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
         """Initialize the switch."""
-        super().__init__(con, mac, "auto_eco_mode")
+        super().__init__(con, entry_id, "auto_eco_mode")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""

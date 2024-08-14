@@ -17,11 +17,9 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, InvalidStateError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.exceptions import InvalidStateError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, POWER_STATUS_TO_MEDIA_PLAYER_STATE, SOURCE_TO_SET_COMMAND
@@ -36,18 +34,13 @@ async def async_setup_entry(
 
     con = config_entry.runtime_data
 
-    # Use config MAC for unique ID for now
-    mac = config_entry.data.get(CONF_MAC)
-    if not mac:
-        raise ConfigEntryError("invalid mac")
-
-    async_add_entities([HitachiProjectorMediaPlayer(con, mac)])
+    async_add_entities([HitachiProjectorMediaPlayer(con, config_entry.entry_id)])
 
 
 class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of a media player."""
 
-    mac: str
+    entry_id: str
 
     supported_features = (
         MediaPlayerEntityFeature.TURN_ON
@@ -55,12 +48,12 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
+    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
         """Initialize the media player."""
-        self.mac = format_mac(mac)
+        self.entry_id = entry_id
         self._con = con
 
-        self._attr_unique_id = f"hitachiprojector_{self.mac}_media_player"
+        self._attr_unique_id = f"hitachiprojector_{self.entry_id}_media_player"
 
         self._attr_has_entity_name = True
         self._attr_name = None
@@ -80,8 +73,7 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
         """Information about this entity/device."""
         return {
             "configuration_url": f"http://{self._con.host}",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            "identifiers": {(DOMAIN, self.mac)},
+            "identifiers": {(DOMAIN, self.entry_id)},
             "manufacturer": "Hitachi",
             "name": "Hitachi Projector",
         }
