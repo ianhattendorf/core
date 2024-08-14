@@ -9,7 +9,7 @@ from libhitachiprojector.hitachiprojector import HitachiProjectorConnection, Rep
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -91,9 +91,6 @@ class HitachiProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_PASSWORD,
                     default=user_input.get(CONF_PASSWORD) if user_input else None,
-                ): str,
-                vol.Required(
-                    CONF_MAC, default=user_input.get(CONF_MAC) if user_input else None
                 ): str,
             }
         )

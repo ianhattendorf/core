@@ -4,8 +4,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "mac": "MAC address"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

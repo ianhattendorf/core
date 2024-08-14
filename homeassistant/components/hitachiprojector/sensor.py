@@ -10,15 +10,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, UnitOfTime
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryError,
-    HomeAssistantError,
-    InvalidStateError,
-)
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.exceptions import HomeAssistantError, InvalidStateError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -33,15 +28,10 @@ async def async_setup_entry(
 
     con = config_entry.runtime_data
 
-    # Use config MAC for unique ID for now
-    mac = config_entry.data.get(CONF_MAC)
-    if not mac:
-        raise ConfigEntryError("invalid mac")
-
     async_add_entities(
         [
-            HitachiProjectorFilterTimeSensor(con, mac),
-            HitachiProjectorLampTimeSensor(con, mac),
+            HitachiProjectorFilterTimeSensor(con, config_entry.entry_id),
+            HitachiProjectorLampTimeSensor(con, config_entry.entry_id),
         ]
     )
 
@@ -50,15 +40,17 @@ class HitachiProjectorBaseSensor(SensorEntity):
     """Representation of device sensor."""
 
     key: str
-    mac: str
+    entry_id: str
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str, key: str) -> None:
+    def __init__(
+        self, con: HitachiProjectorConnection, entry_id: str, key: str
+    ) -> None:
         """Initialize the media player."""
         self._con = con
         self.key = key
-        self.mac = format_mac(mac)
+        self.entry_id = entry_id
 
-        self._attr_unique_id = f"hitachiprojector_{self.mac}_{self.key}"
+        self._attr_unique_id = f"hitachiprojector_{self.entry_id}_{self.key}"
 
         self._attr_translation_key = self.key
         self._attr_has_entity_name = True
@@ -67,8 +59,7 @@ class HitachiProjectorBaseSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Information about this entity/device."""
         return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            "identifiers": {(DOMAIN, self.mac)},
+            "identifiers": {(DOMAIN, self.entry_id)},
         }
 
 
@@ -80,9 +71,9 @@ class HitachiProjectorFilterTimeSensor(HitachiProjectorBaseSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 0
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
+    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
         """Initialize the sensor."""
-        super().__init__(con, mac, "filter_time")
+        super().__init__(con, entry_id, "filter_time")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -104,9 +95,9 @@ class HitachiProjectorLampTimeSensor(HitachiProjectorBaseSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 0
 
-    def __init__(self, con: HitachiProjectorConnection, mac: str) -> None:
+    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
         """Initialize the sensor."""
-        super().__init__(con, mac, "lamp_time")
+        super().__init__(con, entry_id, "lamp_time")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
