@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from libhitachiprojector.hitachiprojector import (
     Command,
-    HitachiProjectorConnection,
     InputSource,
     ReplyType,
     commands,
@@ -22,6 +21,7 @@ from homeassistant.exceptions import InvalidStateError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HitachiProvider
 from .const import DOMAIN, POWER_STATUS_TO_MEDIA_PLAYER_STATE, SOURCE_TO_SET_COMMAND
 
 
@@ -32,9 +32,9 @@ async def async_setup_entry(
 ) -> None:
     """Add media player for passed config_entry in HA."""
 
-    con = config_entry.runtime_data
+    provider = config_entry.runtime_data
 
-    async_add_entities([HitachiProjectorMediaPlayer(con, config_entry.entry_id)])
+    async_add_entities([HitachiProjectorMediaPlayer(provider, config_entry.entry_id)])
 
 
 class HitachiProjectorMediaPlayer(MediaPlayerEntity):
@@ -48,10 +48,10 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
+    def __init__(self, provider: HitachiProvider, entry_id: str) -> None:
         """Initialize the media player."""
         self.entry_id = entry_id
-        self._con = con
+        self.provider = provider
 
         self._attr_unique_id = f"hitachiprojector_{self.entry_id}_media_player"
 
@@ -72,10 +72,11 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     def device_info(self) -> DeviceInfo:
         """Information about this entity/device."""
         return {
-            "configuration_url": f"http://{self._con.host}",
+            "configuration_url": f"http://{self.provider.hitachi_connection.host}",
             "identifiers": {(DOMAIN, self.entry_id)},
-            "manufacturer": "Hitachi",
-            "name": "Hitachi Projector",
+            "manufacturer": self.provider.device_info.get("manufacturer", "Hitachi"),
+            "model": self.provider.device_info.get("model"),
+            "name": self.provider.device_info.get("name", "Hitachi Projector"),
         }
 
     @property
@@ -89,7 +90,10 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         try:
-            reply_type, status = await self._con.get_power_status()
+            (
+                reply_type,
+                status,
+            ) = await self.provider.hitachi_connection.get_power_status()
             if reply_type != ReplyType.DATA or status is None:
                 raise InvalidStateError("Unexpected reply type")
             self._attr_state = POWER_STATUS_TO_MEDIA_PLAYER_STATE[status]
@@ -97,25 +101,31 @@ class HitachiProjectorMediaPlayer(MediaPlayerEntity):
         except RuntimeError:
             self._attr_available = False
 
-        reply_type, status = await self._con.get_input_source()
+        reply_type, status = await self.provider.hitachi_connection.get_input_source()
         if reply_type == ReplyType.DATA and status is not None:
             self._attr_source = status.name
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.PowerTurnOn])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.PowerTurnOn]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.PowerTurnOff])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.PowerTurnOff]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         command = SOURCE_TO_SET_COMMAND[source]
-        reply_type, _ = await self._con.async_send_cmd(commands[command])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[command]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")

@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/hitachiprojector",
   "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["libhitachiprojector==0.0.5"],
+  "requirements": ["libhitachiprojector==0.0.5", "pypjlink2==1.2.1"],
   "ssdp": [],
   "zeroconf": []
 }
