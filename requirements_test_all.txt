@@ -1692,6 +1692,7 @@ pyownet==0.10.0.post1
 # homeassistant.components.lcn
 pypck==0.7.22
 
+# homeassistant.components.hitachiprojector
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
 

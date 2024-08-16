@@ -21,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HitachiProvider
 from .const import DOMAIN
 
 
@@ -31,13 +32,13 @@ async def async_setup_entry(
 ) -> None:
     """Add switches for passed config_entry in HA."""
 
-    con = config_entry.runtime_data
+    provider = config_entry.runtime_data
 
     async_add_entities(
         [
-            HitachiProjectorBlankModeSwitch(con, config_entry.entry_id),
-            HitachiProjectorEcoModeSwitch(con, config_entry.entry_id),
-            HitachiProjectorAutoEcoModeSwitch(con, config_entry.entry_id),
+            HitachiProjectorBlankModeSwitch(provider, config_entry.entry_id),
+            HitachiProjectorEcoModeSwitch(provider, config_entry.entry_id),
+            HitachiProjectorAutoEcoModeSwitch(provider, config_entry.entry_id),
         ]
     )
 
@@ -48,11 +49,9 @@ class HitachiProjectorBaseSwitch(SwitchEntity):
     key: str
     entry_id: str
 
-    def __init__(
-        self, con: HitachiProjectorConnection, entry_id: str, key: str
-    ) -> None:
+    def __init__(self, provider: HitachiProvider, entry_id: str, key: str) -> None:
         """Initialize the media player."""
-        self._con = con
+        self.provider = provider
         self.key = key
         self.entry_id = entry_id
 
@@ -72,14 +71,17 @@ class HitachiProjectorBaseSwitch(SwitchEntity):
 class HitachiProjectorBlankModeSwitch(HitachiProjectorBaseSwitch):
     """Representation of device switch."""
 
-    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
+    def __init__(self, provider: HitachiProvider, entry_id: str) -> None:
         """Initialize the switch."""
-        super().__init__(con, entry_id, "blank_mode")
+        super().__init__(provider, entry_id, "blank_mode")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         try:
-            reply_type, status = await self._con.get_blank_status()
+            (
+                reply_type,
+                status,
+            ) = await self.provider.hitachi_connection.get_blank_status()
             if reply_type != ReplyType.DATA or status is None:
                 raise InvalidStateError("Unexpected reply type")
             self._attr_is_on = status == BlankStatus.On
@@ -89,13 +91,17 @@ class HitachiProjectorBlankModeSwitch(HitachiProjectorBaseSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.BlankOn])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.BlankOn]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.BlankOff])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.BlankOff]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
@@ -110,7 +116,10 @@ class HitachiProjectorEcoModeSwitch(HitachiProjectorBaseSwitch):
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         try:
-            reply_type, status = await self._con.get_eco_mode_status()
+            (
+                reply_type,
+                status,
+            ) = await self.provider.hitachi_connection.get_eco_mode_status()
             if reply_type != ReplyType.DATA or status is None:
                 raise InvalidStateError("Unexpected reply type")
             self._attr_is_on = status == EcoModeStatus.Eco
@@ -120,13 +129,17 @@ class HitachiProjectorEcoModeSwitch(HitachiProjectorBaseSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.EcoModeEco])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.EcoModeEco]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.EcoModeNormal])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.EcoModeNormal]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
@@ -141,7 +154,10 @@ class HitachiProjectorAutoEcoModeSwitch(HitachiProjectorBaseSwitch):
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         try:
-            reply_type, status = await self._con.get_auto_eco_mode_status()
+            (
+                reply_type,
+                status,
+            ) = await self.provider.hitachi_connection.get_auto_eco_mode_status()
             if reply_type != ReplyType.DATA or status is None:
                 raise InvalidStateError("Unexpected reply type")
             self._attr_is_on = status == AutoEcoModeStatus.On
@@ -151,12 +167,16 @@ class HitachiProjectorAutoEcoModeSwitch(HitachiProjectorBaseSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.AutoEcoModeOn])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.AutoEcoModeOn]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        reply_type, _ = await self._con.async_send_cmd(commands[Command.AutoEcoModeOff])
+        reply_type, _ = await self.provider.hitachi_connection.async_send_cmd(
+            commands[Command.AutoEcoModeOff]
+        )
         if reply_type != ReplyType.ACK:
             raise InvalidStateError("Unexpected reply type")

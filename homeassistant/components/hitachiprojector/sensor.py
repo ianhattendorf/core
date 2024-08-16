@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from libhitachiprojector.hitachiprojector import HitachiProjectorConnection, ReplyType
+from libhitachiprojector.hitachiprojector import ReplyType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HitachiProvider
 from .const import DOMAIN
 
 
@@ -26,12 +27,12 @@ async def async_setup_entry(
 ) -> None:
     """Add switches for passed config_entry in HA."""
 
-    con = config_entry.runtime_data
+    provider = config_entry.runtime_data
 
     async_add_entities(
         [
-            HitachiProjectorFilterTimeSensor(con, config_entry.entry_id),
-            HitachiProjectorLampTimeSensor(con, config_entry.entry_id),
+            HitachiProjectorFilterTimeSensor(provider, config_entry.entry_id),
+            HitachiProjectorLampTimeSensor(provider, config_entry.entry_id),
         ]
     )
 
@@ -42,11 +43,9 @@ class HitachiProjectorBaseSensor(SensorEntity):
     key: str
     entry_id: str
 
-    def __init__(
-        self, con: HitachiProjectorConnection, entry_id: str, key: str
-    ) -> None:
+    def __init__(self, provider: HitachiProvider, entry_id: str, key: str) -> None:
         """Initialize the media player."""
-        self._con = con
+        self.provider = provider
         self.key = key
         self.entry_id = entry_id
 
@@ -71,14 +70,17 @@ class HitachiProjectorFilterTimeSensor(HitachiProjectorBaseSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 0
 
-    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
+    def __init__(self, provider: HitachiProvider, entry_id: str) -> None:
         """Initialize the sensor."""
-        super().__init__(con, entry_id, "filter_time")
+        super().__init__(provider, entry_id, "filter_time")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         try:
-            reply_type, status = await self._con.get_filter_time()
+            (
+                reply_type,
+                status,
+            ) = await self.provider.hitachi_connection.get_filter_time()
             if reply_type != ReplyType.DATA or status is None:
                 raise InvalidStateError("Unexpected reply type")
             self._attr_native_value = status
@@ -95,14 +97,14 @@ class HitachiProjectorLampTimeSensor(HitachiProjectorBaseSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 0
 
-    def __init__(self, con: HitachiProjectorConnection, entry_id: str) -> None:
+    def __init__(self, provider: HitachiProvider, entry_id: str) -> None:
         """Initialize the sensor."""
-        super().__init__(con, entry_id, "lamp_time")
+        super().__init__(provider, entry_id, "lamp_time")
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         try:
-            reply_type, status = await self._con.get_lamp_time()
+            reply_type, status = await self.provider.hitachi_connection.get_lamp_time()
             if reply_type != ReplyType.DATA or status is None:
                 raise InvalidStateError("Unexpected reply type")
             self._attr_native_value = status
