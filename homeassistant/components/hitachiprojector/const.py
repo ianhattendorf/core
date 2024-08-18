@@ -1,8 +1,13 @@
 """Constants for the Hitachi Projector integration."""
 
-from libhitachiprojector.hitachiprojector import Command, InputSource, PowerStatus
+from libhitachiprojector.hitachiprojector import (
+    Command,
+    ErrorStatus,
+    InputSource,
+    PowerStatus,
+)
 
-from homeassistant.components.media_player.const import MediaPlayerState
+from homeassistant.components.media_player import MediaPlayerState
 
 DOMAIN = "hitachiprojector"
 
@@ -22,4 +27,25 @@ SOURCE_TO_SET_COMMAND = {
     InputSource.USBTypeA.name: Command.InputSourceUSBTypeA,
     InputSource.LAN.name: Command.InputSourceLAN,
     InputSource.USBTypeA.name: Command.InputSourceUSBTypeA,
+}
+
+ERROR_STATUS_OPTIONS = [
+    "normal",
+    "cover",
+    "fan",
+    "lamp",
+    "temp",
+    "airflow",
+    "cold",
+    "filter",
+]
+ERROR_STATUS_TO_OPTION = {
+    ErrorStatus.Normal: "normal",
+    ErrorStatus.Cover: "cover",
+    ErrorStatus.Fan: "fan",
+    ErrorStatus.Lamp: "lamp",
+    ErrorStatus.Temp: "temp",
+    ErrorStatus.AirFlow: "airflow",
+    ErrorStatus.Cold: "Cold",
+    ErrorStatus.Filter: "filter",
 }

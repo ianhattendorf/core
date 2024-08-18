@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HitachiProvider
-from .const import DOMAIN
+from .const import DOMAIN, ERROR_STATUS_OPTIONS, ERROR_STATUS_TO_OPTION
 
 
 async def async_setup_entry(
@@ -31,6 +31,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
+            HitachiProjectorErrorStatusSensor(provider, config_entry.entry_id),
             HitachiProjectorFilterTimeSensor(provider, config_entry.entry_id),
             HitachiProjectorLampTimeSensor(provider, config_entry.entry_id),
         ]
@@ -60,6 +61,31 @@ class HitachiProjectorBaseSensor(SensorEntity):
         return {
             "identifiers": {(DOMAIN, self.entry_id)},
         }
+
+
+class HitachiProjectorErrorStatusSensor(HitachiProjectorBaseSensor):
+    """Representation of device sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ERROR_STATUS_OPTIONS
+
+    def __init__(self, provider: HitachiProvider, entry_id: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(provider, entry_id, "error_status")
+
+    async def async_update(self) -> None:
+        """Retrieve latest state of the device."""
+        try:
+            (
+                reply_type,
+                status,
+            ) = await self.provider.hitachi_connection.get_error_status()
+            if reply_type != ReplyType.DATA or status is None:
+                raise InvalidStateError("Unexpected reply type")
+            self._attr_native_value = ERROR_STATUS_TO_OPTION[status]
+            self._attr_available = True
+        except (RuntimeError, HomeAssistantError):
+            self._attr_available = False
 
 
 class HitachiProjectorFilterTimeSensor(HitachiProjectorBaseSensor):

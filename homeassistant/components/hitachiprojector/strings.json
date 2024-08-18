@@ -19,6 +19,19 @@
   },
   "entity": {
     "sensor": {
+      "error_status": {
+        "name": "Error status",
+        "state": {
+          "normal": "Normal",
+          "cover": "Cover",
+          "fan": "Fan",
+          "lamp": "Lamp",
+          "temp": "Temp",
+          "airflow": "Air flow",
+          "cold": "Cold",
+          "filter": "Filter"
+        }
+      },
       "filter_time": {
         "name": "Filter time"
       },
