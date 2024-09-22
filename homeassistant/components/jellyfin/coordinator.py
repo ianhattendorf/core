@@ -45,6 +45,7 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT], ABC):
         self.user_id: str = user_id
 
         self.session_ids: set[str] = set()
+        self.remote_session_ids: set[str] = set()
         self.device_ids: set[str] = set()
 
     async def _async_update_data(self) -> JellyfinDataT:
