@@ -15,13 +15,11 @@ from homeassistant.components.remote import (
     RemoteEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import JellyfinConfigEntry
-from .const import DOMAIN
 from .coordinator import JellyfinDataUpdateCoordinator
-from .entity import JellyfinEntity
+from .entity import JellyfinClientEntity
 
 
 async def async_setup_entry(
@@ -54,7 +52,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
 
 
-class JellyfinRemote(JellyfinEntity, RemoteEntity):
+class JellyfinRemote(JellyfinClientEntity, RemoteEntity):
     """Defines a Jellyfin remote entity."""
 
     def __init__(
@@ -69,37 +67,14 @@ class JellyfinRemote(JellyfinEntity, RemoteEntity):
             RemoteEntityDescription(
                 key=session_id,
             ),
+            session_id,
+            session_data,
         )
-
-        self.session_id = session_id
-        self.session_data: dict[str, Any] = session_data
-        self.device_id: str = session_data["DeviceId"]
-        self.device_name: str = session_data["DeviceName"]
-        self.client_name: str = session_data["Client"]
-        self.app_version: str = session_data["ApplicationVersion"]
-
-        self.capabilities: dict[str, Any] = session_data["Capabilities"]
-
-        if self.capabilities.get("SupportsPersistentIdentifier", False):
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self.device_id)},
-                manufacturer="Jellyfin",
-                model=self.client_name,
-                name=self.device_name,
-                sw_version=self.app_version,
-                via_device=(DOMAIN, coordinator.server_id),
-            )
-            self._attr_name = None
-        else:
-            self._attr_device_info = None
-            self._attr_has_entity_name = False
-            self._attr_name = self.device_name
 
     @property
     def is_on(self) -> bool:
         """Return if the client is on."""
-        is_active: bool = self.session_data["IsActive"]
-        return is_active
+        return self.session_data["IsActive"] if self.session_data else False
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to the client."""

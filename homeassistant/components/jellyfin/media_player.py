@@ -13,16 +13,15 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
 from . import JellyfinConfigEntry
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, DOMAIN, LOGGER
+from .const import CONTENT_TYPE_MAP, LOGGER
 from .coordinator import JellyfinDataUpdateCoordinator
-from .entity import JellyfinEntity
+from .entity import JellyfinClientEntity
 
 
 async def async_setup_entry(
@@ -53,7 +52,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
 
 
-class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
+class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     """Represents a Jellyfin Player device."""
 
     def __init__(
@@ -68,33 +67,12 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             MediaPlayerEntityDescription(
                 key=session_id,
             ),
+            session_id,
+            session_data,
         )
 
-        self.session_id = session_id
-        self.session_data: dict[str, Any] | None = session_data
-        self.device_id: str = session_data["DeviceId"]
-        self.device_name: str = session_data["DeviceName"]
-        self.client_name: str = session_data["Client"]
-        self.app_version: str = session_data["ApplicationVersion"]
-
-        self.capabilities: dict[str, Any] = session_data["Capabilities"]
         self.now_playing: dict[str, Any] | None = session_data.get("NowPlayingItem")
         self.play_state: dict[str, Any] | None = session_data.get("PlayState")
-
-        if self.capabilities.get("SupportsPersistentIdentifier", False):
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self.device_id)},
-                manufacturer="Jellyfin",
-                model=self.client_name,
-                name=self.device_name,
-                sw_version=self.app_version,
-                via_device=(DOMAIN, coordinator.server_id),
-            )
-            self._attr_name = None
-        else:
-            self._attr_device_info = None
-            self._attr_has_entity_name = False
-            self._attr_name = self.device_name
 
         self._update_from_session_data()
 
