@@ -1,0 +1,37 @@
+command_display_message:
+  target:
+    entity:
+      integration: jellyfin
+      domain: remote
+
+  fields:
+    header:
+      required: true
+      selector:
+        text:
+
+    text:
+      required: true
+      selector:
+        text:
+
+    timeout_ms:
+      default: 5000
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          mode: box
+          unit_of_measurement: milliseconds
+
+command_send_string:
+  target:
+    entity:
+      integration: jellyfin
+      domain: remote
+
+  fields:
+    string:
+      required: true
+      selector:
+        text:

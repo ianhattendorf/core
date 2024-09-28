@@ -15,9 +15,16 @@ from homeassistant.components.remote import (
     RemoteEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import JellyfinConfigEntry
+from .const import (
+    SERVICE_COMMAND_DISPLAY_MESSAGE,
+    SERVICE_COMMAND_SEND_STRING,
+    SERVICE_SCHEMA_COMMAND_DISPLAY_MESSAGE,
+    SERVICE_SCHEMA_COMMAND_SEND_STRING,
+)
 from .coordinator import JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
 
@@ -50,6 +57,20 @@ async def async_setup_entry(
     handle_coordinator_update()
 
     entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_COMMAND_DISPLAY_MESSAGE,
+        SERVICE_SCHEMA_COMMAND_DISPLAY_MESSAGE,
+        "command_display_message",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_COMMAND_SEND_STRING,
+        SERVICE_SCHEMA_COMMAND_SEND_STRING,
+        "command_send_string",
+    )
 
 
 class JellyfinRemote(JellyfinClientEntity, RemoteEntity):
@@ -87,3 +108,23 @@ class JellyfinRemote(JellyfinClientEntity, RemoteEntity):
                     self.session_id, single_command
                 )
                 time.sleep(delay)
+
+    def command_display_message(self, header: str, text: str, **kwargs: Any) -> None:
+        """Send a command to display a message on a client."""
+        timeout_ms = kwargs.get("timeout_ms")
+
+        arguments = {"Header": header, "Text": text}
+        if timeout_ms is not None:
+            arguments["timeout_ms"] = timeout_ms
+
+        self.coordinator.api_client.jellyfin.command(
+            self.session_id, "DisplayMessage", None, arguments
+        )
+
+    def command_send_string(self, string: str) -> None:
+        """Send a command to enter a string to a client."""
+        arguments = {"String": string}
+
+        self.coordinator.api_client.jellyfin.command(
+            self.session_id, "SendString", None, arguments
+        )

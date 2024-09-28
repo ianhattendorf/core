@@ -41,5 +41,35 @@
         }
       }
     }
+  },
+  "services": {
+    "command_display_message": {
+      "name": "Display Message",
+      "description": "Send a message to be displayed on the client.",
+      "fields": {
+        "header": {
+          "name": "Header",
+          "description": "The header (title) of the message to send."
+        },
+        "text": {
+          "name": "Text",
+          "description": "The text (body) of the message to send."
+        },
+        "timeout_ms": {
+          "name": "Timeout (ms)",
+          "description": "The timeout of the message in milliseconds."
+        }
+      }
+    },
+    "command_send_string": {
+      "name": "Send String",
+      "description": "Send a string to be entered on the client.",
+      "fields": {
+        "string": {
+          "name": "String",
+          "description": "The string to send."
+        }
+      }
+    }
   }
 }

@@ -3,8 +3,12 @@
 import logging
 from typing import Final
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.const import Platform, __version__ as hass_version
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 DOMAIN: Final = "jellyfin"
 
@@ -85,3 +89,21 @@ MEDIA_CLASS_MAP = {
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SENSOR]
 LOGGER = logging.getLogger(__package__)
+
+ATTR_HEADER = "header"
+ATTR_STRING = "string"
+ATTR_TEXT = "text"
+ATTR_TIMEOUT_MS = "timeout_ms"
+
+SERVICE_COMMAND_DISPLAY_MESSAGE = "command_display_message"
+SERVICE_COMMAND_SEND_STRING = "command_send_string"
+
+SERVICE_SCHEMA_COMMAND_DISPLAY_MESSAGE: VolDictType = {
+    vol.Required(ATTR_HEADER): cv.string,
+    vol.Required(ATTR_TEXT): cv.string,
+    vol.Optional(ATTR_TIMEOUT_MS): int,
+}
+
+SERVICE_SCHEMA_COMMAND_SEND_STRING: VolDictType = {
+    vol.Required(ATTR_STRING): cv.string,
+}
